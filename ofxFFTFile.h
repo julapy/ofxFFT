@@ -21,14 +21,14 @@ public :
 	~ofxFFTFile();
 	
 	void  setup				( string fileName );
-	void  setup				( ofSoundPlayer *audio );
+	void  setup				( ofFmodSoundPlayer *audio );
 	void  setup				();
 	
 	void  update			( );
 	
 	void  setFrameRateSync	( bool b );
 	
-	ofSoundPlayer*			audio;
+	ofFmodSoundPlayer* audio;
 	
 private :
 	

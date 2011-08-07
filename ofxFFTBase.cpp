@@ -134,7 +134,11 @@ void ofxFFTBase :: updateAudioData ( ofxFFTData &audioData, float *dataNew )
 	audioData.data.clear();
 	audioData.data.resize( audioData.size, 0 );
 	
-	copy( dataNew, dataNew + audioData.size, audioData.data.begin() );
+    for( int i=0; i<audioData.size; i++ )
+    {
+        audioData.data[ i ] = dataNew[ i ];
+    }
+//	copy( dataNew, dataNew + audioData.size, audioData.data.begin() );
 	
     audioData.peakValue = 0;
     audioData.peakAverage = 0;

@@ -21,7 +21,7 @@ ofxFFTFile :: ~ofxFFTFile()
 
 void ofxFFTFile :: setup( string fileName )
 {
-	audio = new ofSoundPlayer();
+	audio = new ofFmodSoundPlayer();
 	audio->loadSound( fileName, false );
 	audio->play();
 	audio->setPosition( 0.0 );
@@ -31,7 +31,7 @@ void ofxFFTFile :: setup( string fileName )
 	setup();
 }
 
-void ofxFFTFile :: setup( ofSoundPlayer *audioPtr )
+void ofxFFTFile :: setup( ofFmodSoundPlayer *audioPtr )
 {
 	audio = audioPtr;
 	
@@ -44,8 +44,8 @@ void ofxFFTFile :: setup ()
 	
 	if( audio != NULL )
 	{
-//		float audioLengthInvFreq = audio->length / (float)audio->internalFreq;
-//		audioTotalFrames = floor( audioLengthInvFreq * ofGetFrameRate() );
+		float audioLengthInvFreq = audio->length / (float)audio->internalFreq;
+		audioTotalFrames = floor( audioLengthInvFreq * ofGetFrameRate() );
 	}
 	
 	setFrameRateSync( false );
