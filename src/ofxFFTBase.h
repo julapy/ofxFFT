@@ -7,8 +7,7 @@
  *
  */
 
-#ifndef AUDIO_ABSTRACT_H
-#define AUDIO_ABSTRACT_H
+#pragma once
 
 #include "ofMain.h"
 #include "fft.h"
@@ -109,5 +108,3 @@ protected :
 	
     ofMutex mutex;
 };
-
-#endif
