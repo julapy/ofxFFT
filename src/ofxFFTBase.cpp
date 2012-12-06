@@ -64,12 +64,14 @@ void ofxFFTBase::initFFT() {
     fftPower = new float[audioNoOfBandsHalf];
     fftFreq = new float[audioNoOfBandsHalf];
     
-    for(int i=0; i<audioNoOfBandsHalf; i++) {
+    for(int i=0; i<audioNoOfBands; i++) {
         specData[i] = 0;
-        fftMagnitude[i] = 0;
-        fftPhase[i] = 0;
-        fftPower[i] = 0;
-        fftFreq[i] = 0;
+        if(i < audioNoOfBandsHalf) {
+            fftMagnitude[i] = 0;
+            fftPhase[i] = 0;
+            fftPower[i] = 0;
+            fftFreq[i] = 0;
+        }
     }
 }
 
