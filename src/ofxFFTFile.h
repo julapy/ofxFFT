@@ -16,9 +16,15 @@ public:
     ofxFFTFile();
     ~ofxFFTFile();
     
-    void setup(ofBaseSoundPlayer * soundPlayer);
     void setup();
-    
+
     void update();
+
+    void startFrameSync(ofSoundPlayer * player, int frameRate);
     
+    bool bFrameSync;
+    int frameSyncRate;
+    int frameSyncStart;
+    int frameSyncTotal;
+    ofSoundPlayer * player;
 };
