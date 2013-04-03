@@ -21,6 +21,7 @@ public:
     void update();
 
     void startFrameSync(ofSoundPlayer * player, int frameRate);
+    void stopFrameSync();
     
     bool bFrameSync;
     int frameSyncRate;

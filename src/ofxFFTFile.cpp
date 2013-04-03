@@ -64,3 +64,7 @@ void ofxFFTFile::startFrameSync(ofSoundPlayer * soundPlayer, int frameRate) {
     
     bFrameSync = (frameSyncTotal > 0);
 }
+
+void ofxFFTFile::stopFrameSync() {
+    bFrameSync = false;
+}
