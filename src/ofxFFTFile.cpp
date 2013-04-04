@@ -9,7 +9,7 @@
 ofxFFTFile::ofxFFTFile() : ofxFFTBase() {
     bFrameSync = false;
     frameSyncRate = 0;
-    frameSyncStart = 0;
+    frameSyncCount = 0;
     frameSyncTotal = 0;
     player = NULL;
 }
@@ -25,8 +25,9 @@ void ofxFFTFile::setup() {
 void ofxFFTFile::update() {
     
 	if(bFrameSync) {
-		float position = (ofGetFrameNum() - frameSyncStart) / (float)frameSyncTotal;
-		player->setPosition( position );
+        frameSyncCount += 1;
+		float position = frameSyncCount / (float)frameSyncTotal;
+		player->setPosition(position);
 	}
     
     float * data;
@@ -45,12 +46,17 @@ void ofxFFTFile::startFrameSync(ofSoundPlayer * soundPlayer, int frameRate) {
     }
     
     player = soundPlayer;
-	player->setPosition(0.0);
-    player->play();
+    if(player->getIsPlaying()) {
+        player->setPaused(false);
+    } else {
+        player->play();
+    }
+    
+    float position = player->getPosition();
     
     bFrameSync = true;
     frameSyncRate = frameRate;
-    frameSyncStart = ofGetFrameNum();
+    frameSyncCount = 0;
     frameSyncTotal = 0;
     
 #ifdef OF_SOUND_PLAYER_FMOD
@@ -61,6 +67,8 @@ void ofxFFTFile::startFrameSync(ofSoundPlayer * soundPlayer, int frameRate) {
     float audioLengthInvFreq = length / internalFreq;
     frameSyncTotal = audioLengthInvFreq * frameSyncRate;
 #endif
+    
+    frameSyncCount = frameSyncTotal * position;
     
     bFrameSync = (frameSyncTotal > 0);
 }
