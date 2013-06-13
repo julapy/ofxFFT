@@ -229,7 +229,7 @@ void ofxFFTBase::setNoOfBands(int value) {
         return;
     }
     
-    audioNoOfBands = OFX_FFT_NO_OF_BANDS;
+    audioNoOfBands = audioNoOfBandsNew;
     audioNoOfBandsHalf = (int)(audioNoOfBands * 0.5);
     
     killFFT();

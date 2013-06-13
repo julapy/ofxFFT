@@ -11,7 +11,9 @@ ofxFFTLive::ofxFFTLive() : ofxFFTBase() {
 }
 
 ofxFFTLive::~ofxFFTLive() {
-    if(soundStream) {
+    if(soundStream != NULL) {
+        soundStream->stop();
+        soundStream->close();
         delete soundStream;
         soundStream = NULL;
     }
