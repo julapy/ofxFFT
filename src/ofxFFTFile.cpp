@@ -31,10 +31,10 @@ void ofxFFTFile::update() {
 	}
     
     float * data;
-    data = ofSoundGetSpectrum(audioNoOfBands);
+    data = ofSoundGetSpectrum(bufferSize);
     
-    for(int i=0; i<audioNoOfBands; i++) {
-        specData[i] = data[i];
+    for(int i=0; i<bufferSize; i++) {
+        buffer[i] = data[i];
     }
     
     ofxFFTBase::update();

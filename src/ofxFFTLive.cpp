@@ -30,13 +30,11 @@ void ofxFFTLive::setup(ofSoundStream * soundStream) {
         0,                      // out channels.
         1,                      // in channels.
         44100,                  // sample rate.
-        getNoOfBands(),         // buffer size.
+        getBufferSize(),        // buffer size.
         4                       // number of buffers.
     );
 }
 
 void ofxFFTLive::audioIn(float * input, int bufferSize, int nChannels) {
-    mutex.lock();
-    memcpy(specData, input, sizeof(float) * bufferSize);
-    mutex.unlock();
+    memcpy(buffer, input, sizeof(float) * bufferSize);
 }

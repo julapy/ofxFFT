@@ -8,13 +8,15 @@
  */
 
 #include "ofxFFTBase.h"
+#include "fft.h"
 
 ofxFFTBase::ofxFFTBase() {
-    specData = NULL;
-    fftMagnitude = NULL;
-    fftPhase = NULL;
-    fftPower = NULL;
-    fftFreq = NULL;
+    _fft = NULL;
+    buffer = NULL;
+    magnitudes = NULL;
+    magnitudesDB = NULL;
+    phases = NULL;
+    window = NULL;
     
     setMaxDecay(0.995);
     setPeakDecay(0.96);
@@ -23,13 +25,11 @@ ofxFFTBase::ofxFFTBase() {
     
     renderBorder = 1;
     
-    audioNoOfBands = OFX_FFT_NO_OF_BANDS;
-    audioNoOfBandsHalf = (int)(audioNoOfBands * 0.5);
+    bufferSize = 512; // default.
+    binSize = (int)(bufferSize * 0.5);
     
-    killFFT();
     initFFT();
-    initAudioData(rawData, audioNoOfBandsHalf);
-    initAudioData(fftData, audioNoOfBandsHalf);
+    initAudioData(fftData, binSize);
 }
 
 ofxFFTBase::~ofxFFTBase() {
@@ -41,11 +41,16 @@ void ofxFFTBase::setup() {
 }
 
 void ofxFFTBase::update() {
-    mutex.lock();
-    myfft.powerSpectrum(0, audioNoOfBandsHalf, specData, audioNoOfBands, fftMagnitude, fftPhase, fftPower, &fftAveragePower);
-    mutex.unlock();
+
+#if defined(__APPLE_CC__) && !defined(_NO_VDSP)
+    _fft->powerSpectrum_vdsp(0, buffer, window, magnitudes, phases);
+//    _fft->convToDB_vdsp(magnitudes, magnitudesDB);
+#else
+    _fft->powerSpectrum(0, buffer, window, magnitudes, phases);
+//    _fft->convToDB(magnitudes, magnitudesDB);
+#endif
     
-    updateAudioData(fftData, fftMagnitude);
+    updateAudioData(fftData, magnitudes);
     
     if(bMirrorData) {
         mirrorAudioData(fftData);
@@ -57,48 +62,56 @@ void ofxFFTBase::update() {
 //////////////////////////////////////////////////////
 
 void ofxFFTBase::initFFT() {
-    specData = new float[audioNoOfBands];
+    killFFT();
     
-    fftMagnitude = new float[audioNoOfBandsHalf];
-    fftPhase = new float[audioNoOfBandsHalf];
-    fftPower = new float[audioNoOfBandsHalf];
-    fftFreq = new float[audioNoOfBandsHalf];
+    _fft = new fft(bufferSize);
     
-    for(int i=0; i<audioNoOfBands; i++) {
-        specData[i] = 0;
-        if(i < audioNoOfBandsHalf) {
-            fftMagnitude[i] = 0;
-            fftPhase[i] = 0;
-            fftPower[i] = 0;
-            fftFreq[i] = 0;
-        }
-    }
+    buffer = (float *)malloc(bufferSize * sizeof(float));
+    memset(buffer, 0, bufferSize * sizeof(float));
+    
+    magnitudes = (float *)malloc(binSize * sizeof(float));
+    memset(magnitudes, 0, binSize * sizeof(float));
+    
+    magnitudesDB = (float *)malloc(binSize * sizeof(float));
+    memset(magnitudesDB, 0, binSize * sizeof(float));
+    
+    phases = (float *)malloc(binSize * sizeof(float));
+	memset(phases, 0, binSize * sizeof(float));
+
+    window = (float *)malloc(bufferSize * sizeof(float));
+    memset(window, 0, bufferSize * sizeof(float));
+    fft::genWindow(3, bufferSize, window);
 }
 
 void ofxFFTBase::killFFT() {
-    if(specData) {
-        delete[] specData;
-        specData = NULL;
+    if(_fft) {
+        delete _fft;
+        _fft = NULL;
     }
     
-    if(fftMagnitude) {
-        delete[] fftMagnitude;
-        fftMagnitude = NULL;
+    if(buffer) {
+        delete[] buffer;
+        buffer = NULL;
     }
     
-    if(fftPhase) {
-        delete[] fftPhase;
-        fftPhase = NULL;
+    if(magnitudes) {
+        delete[] magnitudes;
+        magnitudes = NULL;
     }
     
-    if(fftPower) {
-        delete[] fftPower;
-        fftPower = NULL;
+    if(magnitudesDB) {
+        delete[] magnitudesDB;
+        magnitudesDB = NULL;
     }
     
-    if(fftFreq) {
-        delete[] fftFreq;
-        fftFreq = NULL;
+    if(phases) {
+        delete[] phases;
+        phases = NULL;
+    }
+    
+    if(window) {
+        delete[] window;
+        window = NULL;
     }
 }
 
@@ -142,6 +155,12 @@ void ofxFFTBase::updateAudioData(ofxFFTData & audioData, float * dataNew) {
         float dataVal;
         dataVal = audioData.data[i]; // use magnitude for fft data.
         dataVal *= audioData.linearEQIntercept + p * audioData.linearEQSlope; // scale value.
+        
+        if(isinf(dataVal)) {
+            ofLog(OF_LOG_ERROR, "ofxFFTBase::updateAudioData - audio data value is infinity.");
+            audioData.peakValue = 0;
+            return;
+        }
         
         float dataPeakRatio;
         dataPeakRatio = dataVal / audioData.peakValue;
@@ -221,30 +240,27 @@ void ofxFFTBase::resetAudioData(ofxFFTData & audioData) {
 // SETTERS / GETTERS.
 //////////////////////////////////////////////////////
 
-void ofxFFTBase::setNoOfBands(int value) {
-    int audioNoOfBandsNew;
-    audioNoOfBandsNew = ofNextPow2(value);
+void ofxFFTBase::setBufferSize(int value) {
+    int bufferSizeNew = ofNextPow2(value);
     
-    if(audioNoOfBands == audioNoOfBandsNew) {
+    if(bufferSize == bufferSizeNew) {
         return;
     }
     
-    audioNoOfBands = audioNoOfBandsNew;
-    audioNoOfBandsHalf = (int)(audioNoOfBands * 0.5);
+    bufferSize = bufferSizeNew;
+    binSize = (int)(bufferSize * 0.5);
     
     killFFT();
     initFFT();
-    initAudioData(rawData, getNoOfBands());
-    initAudioData(fftData, getNoOfBands());
+    initAudioData(fftData, bufferSize);
 }
 
-int ofxFFTBase::getNoOfBands() {
-    return audioNoOfBands;
+int ofxFFTBase::getBufferSize() {
+    return bufferSize;
 }
 
 void ofxFFTBase::setThreshold(float value) {
     value = ofClamp(value, 0, 1);
-    rawData.cutThreshold = value;
     fftData.cutThreshold = value;
 }
 
@@ -258,7 +274,6 @@ float ofxFFTBase::getAveragePeak() {
 
 void ofxFFTBase::setPeakDecay(float value) {
     value = ofClamp(value, 0, 1);
-    rawData.peakDecay = value;
     fftData.peakDecay = value;
 }
 
@@ -268,7 +283,6 @@ float ofxFFTBase::getPeakDecay() {
 
 void ofxFFTBase::setMaxDecay(float value) {
     value = ofClamp(value, 0, 1);
-    rawData.maxDecay = value;
     fftData.maxDecay = value;
 }
 
@@ -286,7 +300,7 @@ void ofxFFTBase::setMirrorData(bool value) {
 
 void ofxFFTBase::getFftData(float * data, int length) {
     for(int i=0; i<length; i++) {
-        int j = (int)((i / (float)(length - 1)) * (audioNoOfBandsHalf - 1));
+        int j = (int)((i / (float)(length - 1)) * (binSize - 1));
         float v  = fftData.dataNorm[j];
         data[i] = v;
     }
@@ -294,7 +308,7 @@ void ofxFFTBase::getFftData(float * data, int length) {
 
 void ofxFFTBase::getFftPeakData(float * data, int length) {
     for(int i=0; i<length; i++) {
-        int j = (int)((i / (float)(length - 1)) * (audioNoOfBandsHalf - 1));
+        int j = (int)((i / (float)(length - 1)) * (binSize - 1));
         float v  = fftData.dataPeak[j];
         data[i] = v;
     }
@@ -302,7 +316,7 @@ void ofxFFTBase::getFftPeakData(float * data, int length) {
 
 void ofxFFTBase::getGlitchData(int * data, int length) {
     for(int i=0; i<length; i++) {
-        int j = (int)((i / (float)(length - 1)) * (audioNoOfBandsHalf - 1));
+        int j = (int)((i / (float)(length - 1)) * (binSize - 1));
         float v  = fftData.dataCut[j];
         data[i] = v;
     }
@@ -317,7 +331,7 @@ void ofxFFTBase::draw(int x, int y) {
 }
 
 void ofxFFTBase::draw(int x, int y, int width, int height) {
-    renderSingleBandWidth = width / (float)audioNoOfBandsHalf;
+    renderSingleBandWidth = width / (float)binSize;
     
     ofPushMatrix();
     ofTranslate(x, y);
@@ -367,7 +381,7 @@ void ofxFFTBase::drawGlitchData(const ofxFFTData & audioData, int w, int h) {
     ofPushStyle();
     ofFill();
     ofSetColor(200);
-    for(int i=0; i<audioNoOfBandsHalf; i++) {
+    for(int i=0; i<binSize; i++) {
         ofRect(i * renderSingleBandWidth + bx,
                h + by,
                renderSingleBandWidth,
@@ -381,7 +395,7 @@ void ofxFFTBase::drawFftData(const ofxFFTData & audioData, int w, int h) {
     bx = by = renderBorder;
 
     ofPushStyle();
-    for(int i=0; i<audioNoOfBandsHalf; i++) {
+    for(int i=0; i<binSize; i++) {
         ofFill();
         ofSetColor(100);
         ofRect(i * renderSingleBandWidth + bx, h + by, renderSingleBandWidth, -audioData.data[i] * h);
@@ -398,7 +412,7 @@ void ofxFFTBase::drawFftNormData(const ofxFFTData & audioData, int w, int h) {
     bx = by = renderBorder;
     
     ofPushStyle();
-    for(int i=0; i<audioNoOfBandsHalf; i++) {
+    for(int i=0; i<binSize; i++) {
         ofFill();
         ofSetColor(100);
         ofRect(i * renderSingleBandWidth + bx, h + by, renderSingleBandWidth, -audioData.dataNorm[i] * h);
@@ -417,7 +431,7 @@ void ofxFFTBase::drawFftPeakData(const ofxFFTData & audioData, int w, int h) {
     ofPushStyle();
     ofFill();
     ofSetColor(0);
-    for(int i=0; i<audioNoOfBandsHalf; i++) {
+    for(int i=0; i<binSize; i++) {
         float p = audioData.dataPeak[i];
         ofRect(i * renderSingleBandWidth + bx, (1 - p) * (h - 2) + by, renderSingleBandWidth - 1, 2);
     }

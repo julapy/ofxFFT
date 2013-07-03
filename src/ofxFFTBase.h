@@ -10,11 +10,11 @@
 #pragma once
 
 #include "ofMain.h"
-#include "fft.h"
+
+class fft;
 
 #define OFX_FFT_WIDTH           512
 #define OFX_FFT_HEIGHT          256
-#define OFX_FFT_NO_OF_BANDS     256
 
 struct ofxFFTData {
     int size;
@@ -62,8 +62,8 @@ public:
     virtual void mirrorAudioData(ofxFFTData &audioData);
     virtual void resetAudioData(ofxFFTData &audioData);
     
-    virtual void setNoOfBands(int value);
-    virtual int getNoOfBands();
+    virtual void setBufferSize(int value);
+    virtual int getBufferSize();
     virtual void setThreshold(float value);
     virtual float getThreshold();
     virtual float getAveragePeak();
@@ -78,26 +78,22 @@ public:
     virtual void getGlitchData(int * data, int length);
     
 protected:
+
+    fft * _fft;
     
-    int audioNoOfBands;
-    int audioNoOfBandsHalf;
-    
-    float * specData;
-    
-    fft myfft;
-    float * fftMagnitude;
-    float * fftPhase;
-    float * fftPower;
-    float * fftFreq;
-    float fftAveragePower;
+    int bufferSize;
+    int binSize;
+    float * buffer;
+    float * magnitudes;
+    float * magnitudesDB;
+    float * phases;
+    float * window;
+    float averagePower;
     
     bool bMirrorData;
     
-    ofxFFTData rawData;
     ofxFFTData fftData;
     
     int renderBorder;
     int renderSingleBandWidth;
-    
-    ofMutex mutex; 
 };
