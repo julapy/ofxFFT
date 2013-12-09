@@ -7,4 +7,6 @@ DerivedData/
 *.mode1v3
 *.mode2v3
 *.app/
+*.xcuserstate
 xcuserdata/
+xcshareddata/
