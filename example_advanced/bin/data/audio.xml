@@ -1,0 +1,7 @@
+<audio>
+	<audioThreshold>0.5</audioThreshold>
+	<audioPeakDecay>0.925</audioPeakDecay>
+	<audioMaxDecay>0.995</audioMaxDecay>
+	<audioMirror>1</audioMirror>
+<audio/>
+</audio>
