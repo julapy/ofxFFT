@@ -77,8 +77,6 @@ public:
     virtual void getFftPeakData(float *data, int length);
     virtual void getGlitchData(int * data, int length);
     
-protected:
-
     fft * _fft;
     
     int bufferSize;
