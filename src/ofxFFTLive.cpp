@@ -11,28 +11,28 @@ ofxFFTLive::ofxFFTLive() : ofxFFTBase() {
 }
 
 ofxFFTLive::~ofxFFTLive() {
-    if(soundStream != NULL) {
-        soundStream->stop();
-        soundStream->close();
-        delete soundStream;
-        soundStream = NULL;
+    if(soundStream == NULL) {
+        return;
     }
+    soundStream->stop();
+    soundStream->close();
+    delete soundStream;
+    soundStream = NULL;
 }
 
 void ofxFFTLive::setup() {
-    setup(new ofSoundStream());
+    ofSoundStream * soundStream = new ofSoundStream();
+    soundStream->setup(this,                   // callback obj.
+                       0,                      // out channels.
+                       1,                      // in channels.
+                       44100,                  // sample rate.
+                       getBufferSize(),        // buffer size.
+                       4);                     // number of buffers.
+    setup(soundStream);
 }
 
 void ofxFFTLive::setup(ofSoundStream * soundStream) {
     this->soundStream = soundStream;
-    soundStream->setup(
-        this,                   // callback obj.
-        0,                      // out channels.
-        1,                      // in channels.
-        44100,                  // sample rate.
-        getBufferSize(),        // buffer size.
-        4                       // number of buffers.
-    );
 }
 
 void ofxFFTLive::audioIn(float * input, int bufferSize, int nChannels) {
