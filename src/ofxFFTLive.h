@@ -17,7 +17,6 @@ public:
     ~ofxFFTLive();
     
     void setup();
-    void setup(ofSoundStream * soundStream);
     void audioIn(float * input, int bufferSize, int nChannels);
     
     ofSoundStream * soundStream;
