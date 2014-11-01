@@ -30,12 +30,8 @@ void ofxFFTFile::update() {
 		player->setPosition(position);
 	}
     
-    float * data;
-    data = ofSoundGetSpectrum(bufferSize);
-    
-    for(int i=0; i<bufferSize; i++) {
-        buffer[i] = data[i];
-    }
+    float * data = ofSoundGetSpectrum(bufferSize);
+    ofxFFTBase::audioIn(data);
     
     ofxFFTBase::update();
 }

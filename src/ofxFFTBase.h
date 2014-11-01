@@ -40,6 +40,8 @@ public:
     ~ofxFFTBase();
     
     virtual void setup();
+
+    virtual void audioIn(float * data);
     virtual void update();
     
     virtual void draw(int x=0, int y=0);

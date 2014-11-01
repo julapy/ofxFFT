@@ -40,6 +40,10 @@ void ofxFFTBase::setup() {
     //
 }
 
+void ofxFFTBase::audioIn(float * data) {
+    memcpy(buffer, data, sizeof(float) * bufferSize);
+}
+
 void ofxFFTBase::update() {
 
 #if defined(__APPLE_CC__) && !defined(_NO_VDSP)

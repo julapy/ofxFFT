@@ -32,5 +32,5 @@ void ofxFFTLive::setup() {
 }
 
 void ofxFFTLive::audioIn(float * input, int bufferSize, int nChannels) {
-    memcpy(buffer, input, sizeof(float) * bufferSize);
+    ofxFFTBase::audioIn(input);
 }
