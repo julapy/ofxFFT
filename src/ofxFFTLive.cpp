@@ -28,6 +28,10 @@ void ofxFFTLive::setup() {
                        44100,                  // sample rate.
                        getBufferSize(),        // buffer size.
                        4);                     // number of buffers.
+    setup(soundStream);
+}
+
+void ofxFFTLive::setup(ofSoundStream * soundStream) {
     this->soundStream = soundStream;
 }
 
