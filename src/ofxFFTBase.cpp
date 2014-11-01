@@ -302,6 +302,22 @@ void ofxFFTBase::setMirrorData(bool value) {
 // GET VARIOUS DATA SAMPLES.
 //////////////////////////////////////////////////////
 
+const vector<float> & ofxFFTBase::getFftRawData() {
+    return fftData.data;
+}
+
+const vector<float> & ofxFFTBase::getFftNormData() {
+    return fftData.dataNorm;
+}
+
+const vector<float> & ofxFFTBase::getFftPeakData() {
+    return fftData.dataPeak;
+}
+
+const vector<int> & ofxFFTBase::getGlitchData() {
+    return fftData.dataCut;
+}
+
 void ofxFFTBase::getFftData(float * data, int length) {
     for(int i=0; i<length; i++) {
         int j = (int)((i / (float)(length - 1)) * (binSize - 1));

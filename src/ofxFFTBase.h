@@ -75,6 +75,11 @@ public:
     virtual float getMaxDecay();
     virtual void setMirrorData(bool value);
     
+    virtual const vector<float> & getFftRawData();
+    virtual const vector<float> & getFftNormData();
+    virtual const vector<float> & getFftPeakData();
+    virtual const vector<int> & getGlitchData();
+    
     virtual void getFftData(float *data, int length);
     virtual void getFftPeakData(float *data, int length);
     virtual void getGlitchData(int * data, int length);
