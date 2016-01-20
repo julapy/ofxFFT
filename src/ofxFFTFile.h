@@ -25,7 +25,7 @@ public:
     
     bool bFrameSync;
     int frameSyncRate;
-    int frameSyncCount;
+    int frameSyncIndex;
     int frameSyncTotal;
     ofSoundPlayer * player;
 };
