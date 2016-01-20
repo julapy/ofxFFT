@@ -373,33 +373,27 @@ void ofxFFTBase::drawBg(const ofxFFTData & audioData, int w, int h) {
     int bx, by; // border.
     bx = by = renderBorder;
     
-    ofPushStyle();
-    ofFill();
     ofSetColor(240);
     ofDrawRectangle(bx, by, w, h);
-    ofPopStyle();
+    ofSetColor(255);
 }
 
 void ofxFFTBase::drawBorder(int w, int h) {
     int bx, by; // border.
     bx = by = renderBorder;
     
-    ofPushStyle();
-    ofFill();
     ofSetColor(80);
     ofDrawRectangle(0, 0, w + bx * 2, 1);
     ofDrawRectangle(0, h + by, w + bx * 2, 1);
     ofDrawRectangle(0, 0, 1, h + by * 2);
     ofDrawRectangle(w + bx, 0, 1, h + by * 2);
-    ofPopStyle();
+    ofSetColor(255);
 }
 
 void ofxFFTBase::drawGlitchData(const ofxFFTData & audioData, int w, int h) {
     int bx, by; // border.
     bx = by = renderBorder;
 
-    ofPushStyle();
-    ofFill();
     ofSetColor(200);
     for(int i=0; i<binSize; i++) {
         ofDrawRectangle(i * renderSingleBandWidth + bx,
@@ -407,14 +401,13 @@ void ofxFFTBase::drawGlitchData(const ofxFFTData & audioData, int w, int h) {
                         renderSingleBandWidth,
                         -audioData.dataCut[i] * h);
     }
-    ofPopStyle();
+    ofSetColor(255);
 }
 
 void ofxFFTBase::drawFftData(const ofxFFTData & audioData, int w, int h) {
     int bx, by; // border.
     bx = by = renderBorder;
 
-    ofPushStyle();
     for(int i=0; i<binSize; i++) {
         ofFill();
         ofSetColor(100);
@@ -424,14 +417,15 @@ void ofxFFTBase::drawFftData(const ofxFFTData & audioData, int w, int h) {
         ofSetColor(232);
         ofDrawRectangle(i * renderSingleBandWidth + bx, h + by, renderSingleBandWidth, -audioData.data[i] * h);
     }
-    ofPopStyle();
+
+    ofFill();
+    ofSetColor(255);
 }
 
 void ofxFFTBase::drawFftNormData(const ofxFFTData & audioData, int w, int h) {
     int bx, by; // border.
     bx = by = renderBorder;
     
-    ofPushStyle();
     for(int i=0; i<binSize; i++) {
         ofFill();
         ofSetColor(100);
@@ -441,32 +435,32 @@ void ofxFFTBase::drawFftNormData(const ofxFFTData & audioData, int w, int h) {
         ofSetColor(232);
         ofDrawRectangle(i * renderSingleBandWidth + bx, h + by, renderSingleBandWidth, -audioData.dataNorm[i] * h);
     }
-    ofPopStyle();
+
+    ofFill();
+    ofSetColor(255);
 }
 
 void ofxFFTBase::drawFftPeakData(const ofxFFTData & audioData, int w, int h) {
     int bx, by; // border.
     bx = by = renderBorder;
 
-    ofPushStyle();
-    ofFill();
     ofSetColor(0);
     for(int i=0; i<binSize; i++) {
         float p = audioData.dataPeak[i];
         ofDrawRectangle(i * renderSingleBandWidth + bx, (1 - p) * (h - 2) + by, renderSingleBandWidth - 1, 2);
     }
-    ofPopStyle();
+    ofSetColor(255);
 }
 
 void ofxFFTBase::drawThresholdLine(const ofxFFTData & audioData, int w, int h) {
     int bx, by; // border.
     bx = by = renderBorder;
     
-    ofFill();
     ofSetColor(0);
     ofDrawRectangle(bx, (1 - audioData.cutThreshold) * h + by - 1, w, 1);
     ofSetColor(255);
     ofDrawRectangle(bx, (1 - audioData.cutThreshold) * h + by + 0, w, 1);
     ofSetColor(0);
     ofDrawRectangle(bx, (1 - audioData.cutThreshold) * h + by + 1, w, 1);
+    ofSetColor(255);
 }
