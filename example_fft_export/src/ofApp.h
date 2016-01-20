@@ -14,7 +14,7 @@ public:
 
     void initSound(string path);
     void killSound();
-    void saveSoundImage();
+    void saveSound();
     
     void update();
     void draw();
@@ -35,8 +35,10 @@ public:
     ofImage soundImage;
     ofMatrix4x4 soundImageMat;
 
-    int fps;
-    string soundPath;
     int numOfPixelsPerSoundFrame;
-    bool bExport;
+    int numOfSoundFramesPerSecond;
+    string soundPath;
+    string soundBaseName;
+    string soundFileName;
+    string sessionDir;
 };

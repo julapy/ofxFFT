@@ -2,11 +2,13 @@
 
 //--------------------------------------------------------------
 ofApp::ofApp() {
-    
-    fps = 30;
-    soundPath = "";
+
     numOfPixelsPerSoundFrame = 128;
-    bExport = false;
+    numOfSoundFramesPerSecond = 30;
+    soundPath = "";
+    soundBaseName = "";
+    soundFileName = "";
+    sessionDir = "";
 }
 
 ofApp::~ofApp() {
@@ -16,7 +18,7 @@ ofApp::~ofApp() {
 //--------------------------------------------------------------
 void ofApp::setup() {
     
-    ofSetFrameRate(fps);
+    ofSetFrameRate(30);
     ofSetVerticalSync(true);
     ofBackground(20);
     
@@ -33,43 +35,84 @@ void ofApp::initSound(string path) {
         return;
     }
     
-    soundPlayer.play();
+    sessionDir = ofGetTimestampString("%Y%m%d%H%M%S");
+    bool bCreatedDir = ofDirectory::createDirectory(sessionDir);
+    if(bCreatedDir == false) {
+        return;
+    }
     
-    fft.startFrameSync(&soundPlayer, fps);
+    ofFile file(path);
+    soundBaseName = file.getBaseName();
+    soundFileName = file.getFileName();
+    file.copyTo(sessionDir + "/" + soundFileName);
     
-    int numOfPixelsTotal = numOfPixelsPerSoundFrame * fft.frameSyncTotal;
-    int soundImageSize = sqrt(numOfPixelsTotal);
+    fft.startFrameSync(&soundPlayer, numOfSoundFramesPerSecond);
+    
+    int numOfSoundPixelsTotal = numOfPixelsPerSoundFrame * fft.frameSyncTotal;
+    int soundImageSize = sqrt(numOfSoundPixelsTotal);
     soundImageSize = ofNextPow2(soundImageSize);
     
     soundImage.allocate(soundImageSize, soundImageSize, OF_IMAGE_GRAYSCALE);
     soundImage.setColor(ofColor(0, 255));
     soundImage.update();
     
-    int soundImageW = soundImage.getWidth();
-    int soundImageH = soundImage.getHeight();
     ofRectangle screenRect(0, 0, ofGetWidth(), ofGetHeight());
-    ofRectangle soundImageRect(0, 0, soundImageW, soundImageH);
+    ofRectangle soundImageRect(0, 0, soundImageSize, soundImageSize);
     soundImageRect.scaleTo(screenRect, OF_ASPECT_RATIO_KEEP);
     soundImageRect.x = (int)soundImageRect.x;
     soundImageRect.y = (int)soundImageRect.y;
     soundImageRect.width = (int)soundImageRect.width;
     soundImageRect.height = (int)soundImageRect.height;
-    float soundImageScale = soundImageRect.width / (float)soundImageW;
+    float soundImageScale = soundImageRect.width / (float)soundImageSize;
     
     soundImageMat.makeIdentityMatrix();
     soundImageMat.preMultTranslate(ofVec3f(soundImageRect.x, soundImageRect.y));
     soundImageMat.preMultScale(ofVec3f(soundImageScale, soundImageScale, 1));
     
-    bExport = true;
+    ofSetFrameRate(10000);
+    ofSetVerticalSync(false);
 }
 
 void ofApp::killSound() {
     
-    bExport = false;
+    fft.stopFrameSync();
+    soundImage.clear();
 }
 
-void ofApp::saveSoundImage() {
-    soundImage.save("image.png");
+void ofApp::saveSound() {
+    
+    if(soundImage.isAllocated() == false) {
+        return;
+    }
+    
+    string soundImagePath = sessionDir;
+    soundImagePath += "/";
+    soundImagePath += soundBaseName;
+    soundImagePath += ".png";
+    soundImage.save(soundImagePath);
+    
+    string xmlPath = sessionDir;
+    xmlPath += "/";
+    xmlPath += soundBaseName;
+    xmlPath += ".xml";
+    
+    ofXml xml;
+    xml.addChild("metadata");
+    xml.setTo("metadata");
+
+    xml.addChild("sound");
+    xml.setValue("sound", soundFileName);
+    
+    xml.addChild("image");
+    xml.setValue("image", soundBaseName + ".png");
+    
+    xml.addChild("numOfSoundFrames");
+    xml.setValue("numOfSoundFrames", ofToString(fft.frameSyncTotal));
+    
+    xml.addChild("numOfPixelsPerSoundFrame");
+    xml.setValue("numOfPixelsPerSoundFrame", ofToString(numOfPixelsPerSoundFrame));
+    
+    xml.save(xmlPath);
 }
 
 //--------------------------------------------------------------
@@ -80,15 +123,17 @@ void ofApp::update() {
         soundPath = "";
     }
     
-    if(bExport == false) {
+    if(fft.bFrameSync == false) {
         return;
     }
     
+    int soundFrameIndex = fft.frameSyncIndex;
+
     fft.update();
 
     vector<float> & soundData = fft.fftData.data;
     unsigned char * soundImagePixels = soundImage.getPixels().getData();
-    int soundImageIndex = (fft.frameSyncCount - 1) * numOfPixelsPerSoundFrame;
+    int soundImageIndex = soundFrameIndex * numOfPixelsPerSoundFrame;
     
     for(int i=0; i<numOfPixelsPerSoundFrame; i++) {
         float d0 = soundData[i+0];
@@ -99,11 +144,13 @@ void ofApp::update() {
     }
     soundImage.update();
     
-    bool bExportFinished = (fft.frameSyncCount == fft.frameSyncTotal);
+    bool bExportFinished = (fft.bFrameSync == false);
     if(bExportFinished == true) {
 
-        saveSoundImage();
-        bExport = false;
+        saveSound();
+        
+        ofSetFrameRate(30);
+        ofSetVerticalSync(true);
     }
 }
 
@@ -126,21 +173,21 @@ void ofApp::draw() {
     fft.draw(fftPad, ofGetHeight() - fftH - fftPad, fftW, fftH);
     
     string msg = "DRAG AND DROP IN AUDIO FILE";
-    if(bExport == true) {
-        msg = "EXPORTING FRAMES: " + ofToString(fft.frameSyncCount) + " / " + ofToString(fft.frameSyncTotal);
+    if(fft.bFrameSync == true) {
+        msg = "WRITING FRAMES: " + ofToString(fft.frameSyncIndex + 1) + " / " + ofToString(fft.frameSyncTotal);
     }
     ofDrawBitmapString(msg, 10, 20);
 }
 
 //--------------------------------------------------------------
 void ofApp::exit() {
-    saveSoundImage();
+    //
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     if(key == ' ') {
-        saveSoundImage();
+        saveSound();
     }
 }
 
